@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>סריקת ברקוד - הרכבת הקלה</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+      background-color: #f8f9fa;
+      direction: rtl;
+    }
+
+    h1 {
+      color: #d62828;
+    }
+
+    input, button {
+      font-size: 16px;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+      display: none;
+      border: 2px solid #dcdcdc;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #ffffff;
+    }
+
+    #start-scan {
+      background-color: #d62828;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #start-scan:hover {
+      background-color: #c41f1f;
+    }
+
+    #result-box {
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 8px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #result {
+      white-space: pre-wrap;
+      text-align: right;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>הרכבת הקלה</h1>
+  <h2>סריקת ברקוד</h2>
+
+  <div>
+    <label for="token">נא להדביק את ה-Token שלך:</label><br>
+    <input id="token" type="password" placeholder="Access Token" />
+  </div>
+
+  <button id="start-scan">התחל סריקה</button>
+
+  <div id="reader"></div>
+
+  <div id="result-box">
+    <h3>תוצאה:</h3>
+    <pre id="result">נא להזין טוקן ולהתחיל בסריקה...</pre>
+  </div>
+
+  <script>
+    const warehouseId = "77d81c6a8125d660";
+    const databricksUrl = "https://dbc-f31fd036-4ba0.cloud.databricks.com/api/2.0/sql/statements/";
+
+    const readerElem = document.getElementById("reader");
+    const resultElem = document.getElementById("result");
+    const tokenInput = document.getElementById("token");
+
+    async function fetchUser(barcode, token) {
+      resultElem.textContent = "טוען...";
+      const res = await fetch(databricksUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          statement: `SELECT * FROM user_barcode_info WHERE barcode = '${barcode}'`,
+          warehouse_id: warehouseId
+        })
+      });
+
+      const data = await res.json();
+      const user = data.results?.data_array?.[0];
+
+      if (!user) {
+        resultElem.textContent = "לא נמצא משתמש עבור הברקוד.";
+      } else {
+        const [barcode, name, email, status] = user;
+        resultElem.textContent = `שם: ${name}\nדוא״ל: ${email}\nסטטוס: ${status}`;
+      }
+    }
+
+    document.getElementById("start-scan").addEventListener("click", () => {
+      const token = tokenInput.value.trim();
+      if (!token) {
+        alert("נא להזין את ה-Token לפני תחילת הסריקה.");
+        return;
+      }
+
+      readerElem.style.display = "block";
+      const scanner = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          const cameraId = devices[0].id;
+          scanner.start(
+            cameraId,
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            barcode => {
+              scanner.stop(); // Stop scanner after first read
+              fetchUser(barcode, token);
+              readerElem.style.display = "none";
+            },
+            error => {
+              console.warn("שגיאת סריקה:", error);
+            }
+          );
+        }
+      }).catch(err => {
+        console.error("שגיאת מצלמה:", err);
+        resultElem.textContent = "שגיאה בגישה למצלמה.";
+      });
+    });
+  </script>
+
+</body>
+</html>
