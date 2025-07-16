@@ -1,178 +1,116 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>סריקת ברקוד - הרכבת הקלה</title>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Barcode Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f4f4f4;
+      color: #333;
+      height: 100vh;
+    }
+    header {
+      background: #2c3e50;
+      width: 100%;
+      padding: 1rem;
+      color: white;
       text-align: center;
-      background-color: #f8f9fa;
-      direction: rtl;
+      font-size: 1.5rem;
+      font-weight: bold;
     }
-
-    h1 {
-      color: #d62828;
+    #scanner-container {
+      margin-top: 2rem;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(0,0,0,0.2);
+      background: white;
     }
-
-    input, button {
-      font-size: 16px;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
     #reader {
       width: 100%;
-      max-width: 400px;
-      margin: 20px auto;
-      display: none;
-      border: 2px solid #dcdcdc;
-      border-radius: 8px;
-      padding: 10px;
-      background-color: #ffffff;
     }
-
-    #start-scan {
-      background-color: #d62828;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    #start-scan:hover {
-      background-color: #c41f1f;
-    }
-
-    #result-box {
-      margin-top: 30px;
-      padding: 15px;
-      border: 1px solid #ccc;
-      background: #fff;
-      border-radius: 8px;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
     #result {
-      white-space: pre-wrap;
-      text-align: right;
-      font-size: 16px;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: green;
+      text-align: center;
     }
-
-    #error {
-      color: red;
-      margin-top: 10px;
+    button {
+      margin-top: 2rem;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #2980b9;
     }
   </style>
 </head>
 <body>
 
-  <h1>הרכבת הקלה</h1>
-  <h2>סריקת ברקוד</h2>
+  <header>📷 Barcode Scanner</header>
 
-  <div>
-    <label for="token">נא להדביק את ה-Token שלך:</label><br>
-    <input id="token" type="password" placeholder="Access Token" />
+  <button onclick="startScanner()">Start Scanning</button>
+
+  <div id="scanner-container" style="display: none;">
+    <div id="reader"></div>
   </div>
 
-  <button id="start-scan">התחל סריקה</button>
-
-  <div id="reader"></div>
-
-  <div id="result-box">
-    <h3>תוצאה:</h3>
-    <pre id="result">נא להזין טוקן ולהתחיל בסריקה...</pre>
-    <div id="error"></div>
-  </div>
+  <div id="result"></div>
 
   <script>
-    const warehouseId = "77d81c6a8125d660";
-    const databricksUrl = "https://dbc-f31fd036-4ba0.cloud.databricks.com/api/2.0/sql/statements/";
+    const resultEl = document.getElementById("result");
+    const scannerContainer = document.getElementById("scanner-container");
 
-    const readerElem = document.getElementById("reader");
-    const resultElem = document.getElementById("result");
-    const errorElem = document.getElementById("error");
-    const tokenInput = document.getElementById("token");
+    function startScanner() {
+      scannerContainer.style.display = "block";
+      resultEl.textContent = "";
 
-    async function fetchUser(barcode, token) {
-      resultElem.textContent = "טוען...";
-      errorElem.textContent = "";
+      const html5QrCode = new Html5Qrcode("reader");
 
-      try {
-        const res = await fetch(databricksUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            statement: `SELECT * FROM user_barcode_info WHERE barcode = '${barcode}'`,
-            warehouse_id: warehouseId
-          })
-        });
-
-        const data = await res.json();
-        console.log("Response from Databricks:", data);
-
-        if (!res.ok) {
-          throw new Error(data.message || "שגיאת API");
-        }
-
-        const user = data.results?.data_array?.[0];
-        if (!user) {
-          resultElem.textContent = "לא נמצא משתמש עבור הברקוד.";
-        } else {
-          const [barcodeVal, name, email, status] = user;
-          resultElem.textContent = `שם: ${name}\nדוא״ל: ${email}\nסטטוס: ${status}`;
-        }
-      } catch (err) {
-        console.error("API error:", err);
-        resultElem.textContent = "";
-        errorElem.textContent = "שגיאה בקריאת המידע: " + err.message;
-      }
-    }
-
-    document.getElementById("start-scan").addEventListener("click", () => {
-      const token = tokenInput.value.trim();
-      if (!token) {
-        alert("נא להזין את ה-Token לפני תחילת הסריקה.");
-        return;
-      }
-
-      readerElem.style.display = "block";
-      const scanner = new Html5Qrcode("reader");
+      const config = {
+        fps: 10,
+        qrbox: 250,
+        rememberLastUsedCamera: true
+      };
 
       Html5Qrcode.getCameras().then(devices => {
-        console.log("Available devices:", devices);
         if (devices && devices.length) {
-          const cameraId = devices[0].id;
-          scanner.start(
-            cameraId,
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            barcode => {
-              console.log("Barcode scanned:", barcode);
-              scanner.stop();
-              fetchUser(barcode, token);
-              readerElem.style.display = "none";
+          html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            qrCodeMessage => {
+              resultEl.textContent = `Scanned Code: ${qrCodeMessage}`;
+              html5QrCode.stop().then(() => {
+                scannerContainer.style.display = "none";
+              });
             },
-            error => {
-              console.warn("שגיאת סריקה:", error);
+            errorMessage => {
+              // ignore scanning errors
             }
-          );
+          ).catch(err => {
+            console.error("Camera start error", err);
+            resultEl.textContent = "Error starting camera.";
+          });
         } else {
-          errorElem.textContent = "לא נמצאה מצלמה במכשיר.";
+          resultEl.textContent = "No camera found.";
         }
-      }).catch(err => {
-        console.error("שגיאת מצלמה:", err);
-        errorElem.textContent = "שגיאה בגישה למצלמה. ודא שהרשאות קיימות ושאתה משתמש ב-Safari ב-iPhone.";
       });
-    });
+    }
   </script>
 
 </body>
