@@ -1,72 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Barcode Scanner</title>
+  <title>הרכבת הקלה - סורק ברקוד</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', 'Heebo', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: #f4f4f4;
+      background: #f9f9f9;
       color: #333;
-      height: 100vh;
+      min-height: 100vh;
     }
+
     header {
-      background: #2c3e50;
       width: 100%;
-      padding: 1rem;
+      background: linear-gradient(to left, #34495e, #2c3e50);
       color: white;
+      padding: 1.2rem;
       text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
+      font-size: 1.7rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
+
+    button {
+      margin-top: 2rem;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+
     #scanner-container {
       margin-top: 2rem;
       width: 90%;
       max-width: 500px;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
       background: white;
+      box-shadow: 0 0 14px rgba(0, 0, 0, 0.1);
+      display: none;
     }
+
     #reader {
       width: 100%;
     }
+
     #result {
-      margin-top: 1rem;
-      font-size: 1.2rem;
+      margin-top: 1.5rem;
+      font-size: 1.3rem;
       font-weight: bold;
-      color: green;
+      color: #27ae60;
       text-align: center;
+      word-wrap: break-word;
+      padding: 0 1rem;
     }
-    button {
-      margin-top: 2rem;
-      padding: 1rem 2rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      background: #3498db;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background: #2980b9;
+
+    @media (max-width: 600px) {
+      header {
+        font-size: 1.5rem;
+      }
+      button {
+        width: 90%;
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 <body>
 
-  <header>📷 Barcode Scanner</header>
+  <header>🚈 הרכבת הקלה</header>
 
-  <button onclick="startScanner()">Start Scanning</button>
+  <button onclick="startScanner()">התחל סריקה</button>
 
-  <div id="scanner-container" style="display: none;">
+  <div id="scanner-container">
     <div id="reader"></div>
   </div>
 
@@ -94,7 +115,7 @@
             { facingMode: "environment" },
             config,
             qrCodeMessage => {
-              resultEl.textContent = `Scanned Code: ${qrCodeMessage}`;
+              resultEl.textContent = `תוצאה: ${qrCodeMessage}`;
               html5QrCode.stop().then(() => {
                 scannerContainer.style.display = "none";
               });
@@ -104,10 +125,10 @@
             }
           ).catch(err => {
             console.error("Camera start error", err);
-            resultEl.textContent = "Error starting camera.";
+            resultEl.textContent = "שגיאה בהפעלת המצלמה.";
           });
         } else {
-          resultEl.textContent = "No camera found.";
+          resultEl.textContent = "לא נמצאה מצלמה.";
         }
       });
     }
