@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>הרכבת הקלה - סורק ברקוד</title>
+  <title>הרכבת הקלה - סריקת רב קו</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', 'Heebo', sans-serif;
+      background: #f4f6f9;
+      color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: #f9f9f9;
-      color: #333;
       min-height: 100vh;
     }
 
@@ -26,6 +26,18 @@
       font-size: 1.7rem;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .instructions {
+      margin-top: 1.5rem;
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+      max-width: 500px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      text-align: center;
     }
 
     button {
@@ -61,13 +73,34 @@
     }
 
     #result {
-      margin-top: 1.5rem;
+      margin-top: 2rem;
+      padding: 1.2rem 1.5rem;
+      border-radius: 10px;
       font-size: 1.3rem;
       font-weight: bold;
-      color: #27ae60;
       text-align: center;
-      word-wrap: break-word;
-      padding: 0 1rem;
+      max-width: 500px;
+      white-space: pre-line;
+    }
+
+    .success {
+      background-color: #dff0d8;
+      color: #3c763d;
+    }
+
+    .warning {
+      background-color: #fcf8e3;
+      color: #8a6d3b;
+    }
+
+    .error {
+      background-color: #f2dede;
+      color: #a94442;
+    }
+
+    .unknown {
+      background-color: #e8e8e8;
+      color: #555;
     }
 
     @media (max-width: 600px) {
@@ -85,6 +118,11 @@
 
   <header>🚈 הרכבת הקלה</header>
 
+  <div class="instructions">
+    שלום פקח 👮‍♂️<br/>
+    לסריקת רב קו לחץ על "התחל סריקה"
+  </div>
+
   <button onclick="startScanner()">התחל סריקה</button>
 
   <div id="scanner-container">
@@ -97,8 +135,15 @@
     const resultEl = document.getElementById("result");
     const scannerContainer = document.getElementById("scanner-container");
 
+    const ravKavStatuses = {
+      "1234567": { text: "✅ נוסע תקין", class: "success" },
+      "2345678": { text: "⚠️ נוסע כמעט תקני\n(לא תיקף 1 נסיעות)", class: "warning" },
+      "3456789": { text: "❌ נוסע לא תקני", class: "error" }
+    };
+
     function startScanner() {
       scannerContainer.style.display = "block";
+      resultEl.style.display = "none";
       resultEl.textContent = "";
 
       const html5QrCode = new Html5Qrcode("reader");
@@ -115,22 +160,39 @@
             { facingMode: "environment" },
             config,
             qrCodeMessage => {
-              resultEl.textContent = `תוצאה: ${qrCodeMessage}`;
               html5QrCode.stop().then(() => {
                 scannerContainer.style.display = "none";
+                displayResult(qrCodeMessage);
               });
             },
             errorMessage => {
-              // ignore scanning errors
+              // silent scan error
             }
           ).catch(err => {
             console.error("Camera start error", err);
+            resultEl.className = "error";
             resultEl.textContent = "שגיאה בהפעלת המצלמה.";
           });
         } else {
+          resultEl.className = "error";
           resultEl.textContent = "לא נמצאה מצלמה.";
         }
       });
+    }
+
+    function displayResult(code) {
+      const status = ravKavStatuses[code];
+      resultEl.style.display = "block";
+
+      let message = `🔢 מספר רב קו: ${code}\n\n`;
+
+      if (status) {
+        resultEl.className = status.class;
+        resultEl.textContent = message + status.text;
+      } else {
+        resultEl.className = "unknown";
+        resultEl.textContent = message + "❓ נוסע לא קיים";
+      }
     }
   </script>
 
