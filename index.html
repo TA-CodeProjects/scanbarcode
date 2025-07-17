@@ -3,198 +3,124 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>הרכבת הקלה - סריקת רב קו</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <title>סריקת רב קו</title>
+  <script type="module">
+    import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js";
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const startButton = document.getElementById("start-scan");
+      const video = document.getElementById("video");
+      const resultBox = document.getElementById("result");
+      const scannedCode = document.getElementById("scanned-code");
+      const icon = document.getElementById("status-icon");
+
+      const knownCodes = {
+        "1234567": { message: "נוסע תקין", color: "#27ae60", icon: "✅" },
+        "2345678": { message: "נוסע כמעט תקני<br><small>(לא תיקף 1 נסיעות)</small>", color: "#f39c12", icon: "⚠️" },
+        "3456789": { message: "נוסע לא תקני", color: "#c0392b", icon: "❌" },
+      };
+
+      let scanner;
+
+      startButton.addEventListener("click", async () => {
+        resultBox.innerHTML = "";
+        scannedCode.textContent = "";
+        icon.textContent = "";
+
+        startButton.disabled = true;
+        startButton.style.backgroundColor = "#888";
+
+        scanner = new QrScanner(video, result => {
+          const code = result.data.replace(/\D/g, "").slice(0, 7);
+          scannedCode.textContent = `קוד סרוק: ${code}`;
+
+          if (knownCodes[code]) {
+            resultBox.innerHTML = `${knownCodes[code].icon} <strong>${knownCodes[code].message}</strong>`;
+            resultBox.style.color = knownCodes[code].color;
+          } else {
+            resultBox.innerHTML = `❓ <strong>נוסע לא קיים</strong>`;
+            resultBox.style.color = "#7f8c8d";
+          }
+
+          scanner.stop();
+          video.style.display = "none";
+          startButton.disabled = false;
+          startButton.style.backgroundColor = "#3498db";
+        });
+
+        await scanner.start();
+        video.style.display = "block";
+      });
+    });
+  </script>
+
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', 'Heebo', sans-serif;
-      background: #f4f6f9;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    header {
-      width: 100%;
-      background: linear-gradient(to left, #34495e, #2c3e50);
-      color: white;
-      padding: 1.2rem;
+      font-family: 'Heebo', sans-serif;
       text-align: center;
-      font-size: 1.7rem;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 2rem 1rem;
+      background: #f4f6f7;
+      color: #2c3e50;
     }
 
-    .instructions {
-      margin-top: 1.5rem;
-      background: white;
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
-      max-width: 500px;
-      font-size: 1.1rem;
-      line-height: 1.6;
-      text-align: center;
+    h1 {
+      margin-bottom: 1rem;
+      color: #34495e;
     }
 
-    button {
-      margin-top: 2rem;
-      padding: 1rem 2.5rem;
-      font-size: 1.1rem;
-      background-color: #e74c3c;
+    #start-scan {
+      font-size: 1.3rem;
+      background: #3498db;
       color: white;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    button:hover {
-      background-color: #c0392b;
-    }
-
-    #scanner-container {
-      margin-top: 2rem;
-      width: 90%;
-      max-width: 500px;
       border-radius: 12px;
-      overflow: hidden;
-      background: white;
-      box-shadow: 0 0 14px rgba(0, 0, 0, 0.1);
-      display: none;
+      padding: 0.8rem 1.6rem;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-bottom: 2rem;
     }
 
-    #reader {
+    #start-scan:hover:not(:disabled) {
+      background: #2980b9;
+    }
+
+    #video {
       width: 100%;
+      max-width: 360px;
+      display: none;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.2);
     }
 
     #result {
-      margin-top: 2rem;
-      padding: 1.2rem 1.5rem;
-      border-radius: 10px;
-      font-size: 1.3rem;
-      font-weight: bold;
-      text-align: center;
-      max-width: 500px;
-      white-space: pre-line;
+      font-size: 1.4rem;
+      margin-top: 1rem;
     }
 
-    .success {
-      background-color: #dff0d8;
-      color: #3c763d;
-    }
-
-    .warning {
-      background-color: #fcf8e3;
-      color: #8a6d3b;
-    }
-
-    .error {
-      background-color: #f2dede;
-      color: #a94442;
-    }
-
-    .unknown {
-      background-color: #e8e8e8;
+    #scanned-code {
+      margin-top: 1rem;
+      font-size: 1.1rem;
       color: #555;
     }
 
-    @media (max-width: 600px) {
-      header {
-        font-size: 1.5rem;
-      }
-      button {
-        width: 90%;
-        font-size: 1rem;
-      }
+    .instruction {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
     }
   </style>
 </head>
 <body>
 
-  <header>🚈 הרכבת הקלה</header>
+  <h1>הרכבת הקלה</h1>
+  <div class="instruction">שלום פקח<br>לסריקת רב קו לחץ על הכפתור</div>
 
-  <div class="instructions">
-    שלום פקח 👮‍♂️<br/>
-    לסריקת רב קו לחץ על "התחל סריקה"
-  </div>
+  <button id="start-scan">התחל סריקה</button>
 
-  <button onclick="startScanner()">התחל סריקה</button>
+  <video id="video" playsinline></video>
 
-  <div id="scanner-container">
-    <div id="reader"></div>
-  </div>
-
+  <div id="scanned-code"></div>
   <div id="result"></div>
-
-  <script>
-    const resultEl = document.getElementById("result");
-    const scannerContainer = document.getElementById("scanner-container");
-
-    const ravKavStatuses = {
-      "1234567": { text: "✅ נוסע תקין", class: "success" },
-      "2345678": { text: "⚠️ נוסע כמעט תקני\n(לא תיקף 1 נסיעות)", class: "warning" },
-      "3456789": { text: "❌ נוסע לא תקני", class: "error" }
-    };
-
-    function startScanner() {
-      scannerContainer.style.display = "block";
-      resultEl.style.display = "none";
-      resultEl.textContent = "";
-
-      const html5QrCode = new Html5Qrcode("reader");
-
-      const config = {
-        fps: 10,
-        qrbox: 250,
-        rememberLastUsedCamera: true
-      };
-
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          html5QrCode.start(
-            { facingMode: "environment" },
-            config,
-            qrCodeMessage => {
-              html5QrCode.stop().then(() => {
-                scannerContainer.style.display = "none";
-                displayResult(qrCodeMessage);
-              });
-            },
-            errorMessage => {
-              // silent scan error
-            }
-          ).catch(err => {
-            console.error("Camera start error", err);
-            resultEl.className = "error";
-            resultEl.textContent = "שגיאה בהפעלת המצלמה.";
-          });
-        } else {
-          resultEl.className = "error";
-          resultEl.textContent = "לא נמצאה מצלמה.";
-        }
-      });
-    }
-
-    function displayResult(code) {
-      const status = ravKavStatuses[code];
-      resultEl.style.display = "block";
-
-      let message = `🔢 מספר רב קו: ${code}\n\n`;
-
-      if (status) {
-        resultEl.className = status.class;
-        resultEl.textContent = message + status.text;
-      } else {
-        resultEl.className = "unknown";
-        resultEl.textContent = message + "❓ נוסע לא קיים";
-      }
-    }
-  </script>
 
 </body>
 </html>
