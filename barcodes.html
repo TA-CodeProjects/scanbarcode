@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>סריקת ברקודים לבדיקה</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Heebo', sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+      color: #333;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .barcode-container {
+      margin: 1.5rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    svg {
+      width: 100%;
+      height: 80px;
+    }
+
+    .label {
+      margin-top: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>סרוק את הברקוד</h1>
+
+  <div class="barcode-container">
+    <svg id="code1"></svg>
+  </div>
+
+  <div class="barcode-container">
+    <svg id="code2"></svg>
+  </div>
+
+  <div class="barcode-container">
+    <svg id="code3"></svg>
+  </div>
+
+  <div class="barcode-container">
+    <svg id="code4"></svg>
+  </div>
+
+  <script>
+    JsBarcode("#code1", "1234567", { format: "CODE128", displayValue: true });
+    JsBarcode("#code2", "2345678", { format: "CODE128", displayValue: true });
+    JsBarcode("#code3", "3456789", { format: "CODE128", displayValue: true });
+    JsBarcode("#code4", "9999999", { format: "CODE128", displayValue: true });
+  </script>
+
+</body>
+</html>
