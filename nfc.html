@@ -34,6 +34,10 @@
       transition: background 0.3s;
     }
 
+    button.scanning {
+      background-color: #f39c12 !important; /* orange while scanning */
+    }
+
     button:hover {
       background-color: #c0392b;
     }
@@ -59,7 +63,7 @@
   <h1>שלום פקח</h1>
   <p>לסריקת רב קו, לחץ על הכפתור והצמד את הכרטיס</p>
 
-  <button onclick="startNFC()">התחל סריקה</button>
+  <button id="scanBtn" onclick="startNFC()">התחל סריקה</button>
 
   <div id="scanned"></div>
 
@@ -71,36 +75,45 @@
     };
 
     async function startNFC() {
+      const btn = document.getElementById('scanBtn');
+      const scannedDiv = document.getElementById('scanned');
+      btn.classList.add('scanning');
+      scannedDiv.innerHTML = "ממתין לסריקה...";
+
       if ('NDEFReader' in window) {
         const reader = new NDEFReader();
         try {
           await reader.scan();
+
           reader.onreading = event => {
             const record = event.message.records[0];
             const textDecoder = new TextDecoder();
-            const code = textDecoder.decode(record.data);
+            const code = textDecoder.decode(record.data).trim();
 
             const result = knownTags[code];
-            const scannedDiv = document.getElementById('scanned');
             if (result) {
               scannedDiv.innerHTML = `
                 <div class="icon ${result.class}">${result.icon}</div>
-                <div>המספר שנסרק: <b>${code}</b></div>
+                <div>מספר כרטיס: <b>${code}</b></div>
                 <div class="${result.class}">${result.message}</div>
               `;
             } else {
               scannedDiv.innerHTML = `
                 <div class="icon error">❓</div>
-                <div>המספר שנסרק: <b>${code}</b></div>
+                <div>מספר כרטיס: <b>${code}</b></div>
                 <div class="error">נוסע לא קיים</div>
               `;
             }
+
+            btn.classList.remove('scanning');
           };
         } catch (error) {
-          alert("שגיאה בסריקת NFC: " + error.message);
+          scannedDiv.innerHTML = `<div class="error">שגיאה בסריקה: ${error.message}</div>`;
+          btn.classList.remove('scanning');
         }
       } else {
         alert("הדפדפן שלך לא תומך ב-NFC.");
+        btn.classList.remove('scanning');
       }
     }
   </script>
