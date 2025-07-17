@@ -3,69 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>סריקת ברקודים לבדיקה</title>
+  <title>ברקודים לסריקה</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
     body {
+      margin: 0;
+      background: #ffffff;
       font-family: 'Segoe UI', 'Heebo', sans-serif;
-      text-align: center;
-      background: #f9f9f9;
-      color: #333;
-      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
     }
 
     h1 {
       font-size: 1.8rem;
-      margin-bottom: 1rem;
+      margin-bottom: 2rem;
+      color: #2c3e50;
     }
 
-    .barcode-container {
-      margin: 1.5rem auto;
-      padding: 1rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
+    .barcode-wrapper {
+      margin-bottom: 3rem;
+      text-align: center;
     }
 
     svg {
       width: 100%;
-      height: 80px;
+      max-width: 400px;
+      height: 120px;
     }
 
-    .label {
+    .code-label {
       margin-top: 0.5rem;
-      font-size: 1.1rem;
+      font-size: 1.3rem;
       font-weight: bold;
+      direction: ltr;
+      letter-spacing: 2px;
     }
   </style>
 </head>
 <body>
 
-  <h1>סרוק את הברקוד</h1>
+  <h1>ברקודים לסריקה</h1>
 
-  <div class="barcode-container">
-    <svg id="code1"></svg>
+  <div class="barcode-wrapper">
+    <svg id="barcode1"></svg>
+    <div class="code-label">1234567</div>
   </div>
 
-  <div class="barcode-container">
-    <svg id="code2"></svg>
+  <div class="barcode-wrapper">
+    <svg id="barcode2"></svg>
+    <div class="code-label">2345678</div>
   </div>
 
-  <div class="barcode-container">
-    <svg id="code3"></svg>
+  <div class="barcode-wrapper">
+    <svg id="barcode3"></svg>
+    <div class="code-label">3456789</div>
   </div>
 
-  <div class="barcode-container">
-    <svg id="code4"></svg>
+  <div class="barcode-wrapper">
+    <svg id="barcode4"></svg>
+    <div class="code-label">9999999</div>
   </div>
 
   <script>
-    JsBarcode("#code1", "1234567", { format: "CODE128", displayValue: true });
-    JsBarcode("#code2", "2345678", { format: "CODE128", displayValue: true });
-    JsBarcode("#code3", "3456789", { format: "CODE128", displayValue: true });
-    JsBarcode("#code4", "9999999", { format: "CODE128", displayValue: true });
+    const options = {
+      format: "CODE128",
+      lineColor: "#000",
+      width: 3,
+      height: 120,
+      displayValue: false
+    };
+
+    JsBarcode("#barcode1", "1234567", options);
+    JsBarcode("#barcode2", "2345678", options);
+    JsBarcode("#barcode3", "3456789", options);
+    JsBarcode("#barcode4", "9999999", options);
   </script>
 
 </body>
