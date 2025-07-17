@@ -2,132 +2,108 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>סריקת רב קו</title>
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <script src="https://unpkg.com/@zxing/browser@latest"></script>
   <style>
     body {
       font-family: 'Heebo', sans-serif;
-      text-align: center;
-      padding: 2rem 1rem;
-      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      background: #f5f5f5;
       color: #2c3e50;
     }
 
     h1 {
+      font-size: 2rem;
       margin-bottom: 1rem;
-      color: #2c3e50;
     }
 
-    #start-scan {
-      font-size: 1.3rem;
-      background: #3498db;
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    #start-btn {
+      background: #2980b9;
       color: white;
       border: none;
-      border-radius: 12px;
-      padding: 0.8rem 1.6rem;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border-radius: 10px;
       cursor: pointer;
-      transition: 0.3s;
-      margin-bottom: 1.5rem;
+      transition: background 0.3s;
     }
 
-    #start-scan.scanning {
-      background: #888;
+    #start-btn.scanning {
+      background: #27ae60;
+    }
+
+    #video-container {
+      margin-top: 2rem;
     }
 
     video {
       width: 100%;
-      max-width: 360px;
-      margin-top: 1rem;
+      max-width: 400px;
+      border: 3px solid #ccc;
       border-radius: 10px;
-      display: none;
-    }
-
-    #scanned-code {
-      margin-top: 1rem;
-      font-size: 1.2rem;
-      color: #34495e;
     }
 
     #result {
-      margin-top: 0.5rem;
+      margin-top: 1.5rem;
       font-size: 1.5rem;
       font-weight: bold;
-    }
-
-    .instruction {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
+      color: #8e44ad;
     }
   </style>
 </head>
 <body>
 
-  <h1>רב קו - סריקה</h1>
-  <div class="instruction">שלום פקח<br>לסריקת רב קו לחץ על הכפתור</div>
+  <h1>סריקת רב קו</h1>
+  <p>שלום פקח, לסריקת רב קו לחץ על כפתור "התחל סריקה"</p>
+  <button id="start-btn">התחל סריקה</button>
 
-  <button id="start-scan">התחל סריקה</button>
-
-  <video id="video" playsinline></video>
-
-  <div id="scanned-code"></div>
+  <div id="video-container"></div>
   <div id="result"></div>
 
   <script>
-    const codeReader = new ZXing.BrowserBarcodeReader();
-    const video = document.getElementById("video");
-    const startButton = document.getElementById("start-scan");
-    const resultDiv = document.getElementById("result");
-    const scannedCodeDiv = document.getElementById("scanned-code");
+    const btn = document.getElementById('start-btn');
+    const result = document.getElementById('result');
+    const videoContainer = document.getElementById('video-container');
 
-    const knownCodes = {
-      "1234567": { message: "✅ נוסע תקין", color: "#27ae60" },
-      "2345678": { message: "⚠️ נוסע כמעט תקני<br><small>(לא תיקף 1 נסיעות)</small>", color: "#f39c12" },
-      "3456789": { message: "❌ נוסע לא תקני", color: "#c0392b" },
-    };
+    let codeReader;
 
-    startButton.addEventListener("click", async () => {
-      resultDiv.innerHTML = "";
-      scannedCodeDiv.textContent = "";
+    btn.addEventListener('click', async () => {
+      result.textContent = '';
+      btn.classList.add('scanning');
 
-      startButton.disabled = true;
-      startButton.classList.add("scanning");
-      video.style.display = "block";
+      if (!codeReader) {
+        codeReader = new ZXing.BrowserMultiFormatReader();
+      }
 
       try {
-        const devices = await codeReader.getVideoInputDevices();
-        const firstDeviceId = devices[0]?.deviceId;
+        const videoInputDevices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+        const selectedDeviceId = videoInputDevices[0].deviceId;
 
-        if (!firstDeviceId) {
-          alert("מצלמה לא נמצאה");
-          return;
-        }
+        const previewElem = document.createElement('video');
+        videoContainer.innerHTML = '';
+        videoContainer.appendChild(previewElem);
 
-        await codeReader.decodeOnceFromVideoDevice(firstDeviceId, "video").then(result => {
-          const code = result.text.replace(/\D/g, "").slice(0, 7);
-          scannedCodeDiv.textContent = `קוד סרוק: ${code}`;
-
-          if (knownCodes[code]) {
-            resultDiv.innerHTML = knownCodes[code].message;
-            resultDiv.style.color = knownCodes[code].color;
-          } else {
-            resultDiv.innerHTML = "❓ נוסע לא קיים";
-            resultDiv.style.color = "#7f8c8d";
+        await codeReader.decodeFromVideoDevice(selectedDeviceId, previewElem, (resultObj, err) => {
+          if (resultObj) {
+            btn.classList.remove('scanning');
+            result.textContent = 'המספר שנסרק: ' + resultObj.text;
+            codeReader.reset();
           }
-
-          codeReader.reset();
-          startButton.disabled = false;
-          startButton.classList.remove("scanning");
-          video.style.display = "none";
         });
       } catch (err) {
-        console.error(err);
-        alert("שגיאה בסריקה");
-        startButton.disabled = false;
-        startButton.classList.remove("scanning");
-        video.style.display = "none";
+        btn.classList.remove('scanning');
+        result.textContent = 'אירעה שגיאה: ' + err;
       }
     });
   </script>
+
 </body>
 </html>
