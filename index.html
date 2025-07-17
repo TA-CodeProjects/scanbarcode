@@ -2,70 +2,21 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>סריקת רב קו</title>
-  <script type="module">
-    import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js";
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const startButton = document.getElementById("start-scan");
-      const video = document.getElementById("video");
-      const resultBox = document.getElementById("result");
-      const scannedCode = document.getElementById("scanned-code");
-      const icon = document.getElementById("status-icon");
-
-      const knownCodes = {
-        "1234567": { message: "נוסע תקין", color: "#27ae60", icon: "✅" },
-        "2345678": { message: "נוסע כמעט תקני<br><small>(לא תיקף 1 נסיעות)</small>", color: "#f39c12", icon: "⚠️" },
-        "3456789": { message: "נוסע לא תקני", color: "#c0392b", icon: "❌" },
-      };
-
-      let scanner;
-
-      startButton.addEventListener("click", async () => {
-        resultBox.innerHTML = "";
-        scannedCode.textContent = "";
-        icon.textContent = "";
-
-        startButton.disabled = true;
-        startButton.style.backgroundColor = "#888";
-
-        scanner = new QrScanner(video, result => {
-          const code = result.data.replace(/\D/g, "").slice(0, 7);
-          scannedCode.textContent = `קוד סרוק: ${code}`;
-
-          if (knownCodes[code]) {
-            resultBox.innerHTML = `${knownCodes[code].icon} <strong>${knownCodes[code].message}</strong>`;
-            resultBox.style.color = knownCodes[code].color;
-          } else {
-            resultBox.innerHTML = `❓ <strong>נוסע לא קיים</strong>`;
-            resultBox.style.color = "#7f8c8d";
-          }
-
-          scanner.stop();
-          video.style.display = "none";
-          startButton.disabled = false;
-          startButton.style.backgroundColor = "#3498db";
-        });
-
-        await scanner.start();
-        video.style.display = "block";
-      });
-    });
-  </script>
-
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
   <style>
     body {
       font-family: 'Heebo', sans-serif;
       text-align: center;
       padding: 2rem 1rem;
-      background: #f4f6f7;
+      background: #f0f4f8;
       color: #2c3e50;
     }
 
     h1 {
       margin-bottom: 1rem;
-      color: #34495e;
+      color: #2c3e50;
     }
 
     #start-scan {
@@ -77,31 +28,31 @@
       padding: 0.8rem 1.6rem;
       cursor: pointer;
       transition: 0.3s;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
-    #start-scan:hover:not(:disabled) {
-      background: #2980b9;
+    #start-scan.scanning {
+      background: #888;
     }
 
-    #video {
+    video {
       width: 100%;
       max-width: 360px;
-      display: none;
-      margin-bottom: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
-    }
-
-    #result {
-      font-size: 1.4rem;
       margin-top: 1rem;
+      border-radius: 10px;
+      display: none;
     }
 
     #scanned-code {
       margin-top: 1rem;
-      font-size: 1.1rem;
-      color: #555;
+      font-size: 1.2rem;
+      color: #34495e;
+    }
+
+    #result {
+      margin-top: 0.5rem;
+      font-size: 1.5rem;
+      font-weight: bold;
     }
 
     .instruction {
@@ -112,7 +63,7 @@
 </head>
 <body>
 
-  <h1>הרכבת הקלה</h1>
+  <h1>רב קו - סריקה</h1>
   <div class="instruction">שלום פקח<br>לסריקת רב קו לחץ על הכפתור</div>
 
   <button id="start-scan">התחל סריקה</button>
@@ -122,5 +73,61 @@
   <div id="scanned-code"></div>
   <div id="result"></div>
 
+  <script>
+    const codeReader = new ZXing.BrowserBarcodeReader();
+    const video = document.getElementById("video");
+    const startButton = document.getElementById("start-scan");
+    const resultDiv = document.getElementById("result");
+    const scannedCodeDiv = document.getElementById("scanned-code");
+
+    const knownCodes = {
+      "1234567": { message: "✅ נוסע תקין", color: "#27ae60" },
+      "2345678": { message: "⚠️ נוסע כמעט תקני<br><small>(לא תיקף 1 נסיעות)</small>", color: "#f39c12" },
+      "3456789": { message: "❌ נוסע לא תקני", color: "#c0392b" },
+    };
+
+    startButton.addEventListener("click", async () => {
+      resultDiv.innerHTML = "";
+      scannedCodeDiv.textContent = "";
+
+      startButton.disabled = true;
+      startButton.classList.add("scanning");
+      video.style.display = "block";
+
+      try {
+        const devices = await codeReader.getVideoInputDevices();
+        const firstDeviceId = devices[0]?.deviceId;
+
+        if (!firstDeviceId) {
+          alert("מצלמה לא נמצאה");
+          return;
+        }
+
+        await codeReader.decodeOnceFromVideoDevice(firstDeviceId, "video").then(result => {
+          const code = result.text.replace(/\D/g, "").slice(0, 7);
+          scannedCodeDiv.textContent = `קוד סרוק: ${code}`;
+
+          if (knownCodes[code]) {
+            resultDiv.innerHTML = knownCodes[code].message;
+            resultDiv.style.color = knownCodes[code].color;
+          } else {
+            resultDiv.innerHTML = "❓ נוסע לא קיים";
+            resultDiv.style.color = "#7f8c8d";
+          }
+
+          codeReader.reset();
+          startButton.disabled = false;
+          startButton.classList.remove("scanning");
+          video.style.display = "none";
+        });
+      } catch (err) {
+        console.error(err);
+        alert("שגיאה בסריקה");
+        startButton.disabled = false;
+        startButton.classList.remove("scanning");
+        video.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>
