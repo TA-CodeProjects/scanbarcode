@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ברקודים לסריקה</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #ffffff;
+      font-family: 'Segoe UI', 'Heebo', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      color: #2c3e50;
+    }
+
+    .qr-wrapper {
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    canvas {
+      width: 180px;
+      height: 180px;
+    }
+
+    .code-label {
+      margin-top: 1rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+      direction: ltr;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ברקודים לסריקה</h1>
+
+  <div class="qr-wrapper">
+    <canvas id="qr1"></canvas>
+    <div class="code-label">1234567</div>
+  </div>
+
+  <div class="qr-wrapper">
+    <canvas id="qr2"></canvas>
+    <div class="code-label">2345678</div>
+  </div>
+
+  <div class="qr-wrapper">
+    <canvas id="qr3"></canvas>
+    <div class="code-label">3456789</div>
+  </div>
+
+  <div class="qr-wrapper">
+    <canvas id="qr4"></canvas>
+    <div class="code-label">9999999</div>
+  </div>
+
+  <script>
+    const codes = [
+      { id: "qr1", value: "1234567" },
+      { id: "qr2", value: "2345678" },
+      { id: "qr3", value: "3456789" },
+      { id: "qr4", value: "9999999" }
+    ];
+
+    codes.forEach(({ id, value }) => {
+      new QRious({
+        element: document.getElementById(id),
+        value: value,
+        size: 180,
+        background: 'white',
+        foreground: 'black'
+      });
+    });
+  </script>
+
+</body>
+</html>
