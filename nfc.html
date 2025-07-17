@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>סריקת NFC</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Heebo', sans-serif;
+      background: #f4f6f8;
+      color: #2c3e50;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.2rem;
+    }
+
+    button {
+      margin-top: 2rem;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+
+    #scanned {
+      margin-top: 3rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .success { color: green; }
+    .warning { color: orange; }
+    .error   { color: red; }
+  </style>
+</head>
+<body>
+
+  <h1>שלום פקח</h1>
+  <p>לסריקת רב קו, לחץ על הכפתור והצמד את הכרטיס</p>
+
+  <button onclick="startNFC()">התחל סריקה</button>
+
+  <div id="scanned"></div>
+
+  <script>
+    const knownTags = {
+      "1234567": { message: "נוסע תקין", icon: "✅", class: "success" },
+      "2345678": { message: "נוסע כמעט תקני<br><small>(לא תיקף 1 נסיעות)</small>", icon: "⚠️", class: "warning" },
+      "3456789": { message: "נוסע לא תקני", icon: "❌", class: "error" }
+    };
+
+    async function startNFC() {
+      if ('NDEFReader' in window) {
+        const reader = new NDEFReader();
+        try {
+          await reader.scan();
+          reader.onreading = event => {
+            const record = event.message.records[0];
+            const textDecoder = new TextDecoder();
+            const code = textDecoder.decode(record.data);
+
+            const result = knownTags[code];
+            const scannedDiv = document.getElementById('scanned');
+            if (result) {
+              scannedDiv.innerHTML = `
+                <div class="icon ${result.class}">${result.icon}</div>
+                <div>המספר שנסרק: <b>${code}</b></div>
+                <div class="${result.class}">${result.message}</div>
+              `;
+            } else {
+              scannedDiv.innerHTML = `
+                <div class="icon error">❓</div>
+                <div>המספר שנסרק: <b>${code}</b></div>
+                <div class="error">נוסע לא קיים</div>
+              `;
+            }
+          };
+        } catch (error) {
+          alert("שגיאה בסריקת NFC: " + error.message);
+        }
+      } else {
+        alert("הדפדפן שלך לא תומך ב-NFC.");
+      }
+    }
+  </script>
+
+</body>
+</html>
